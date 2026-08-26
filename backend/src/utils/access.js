@@ -20,6 +20,7 @@ const roleOf = (user) => user?.role?.type ?? null;
 
 const isAdmin = (user) => roleOf(user) === ROLES.ADMIN;
 const isInstructor = (user) => roleOf(user) === ROLES.INSTRUCTOR;
+const isContentManager = (user) => roleOf(user) === ROLES.CONTENT_MANAGER;
 const isStudent = (user) => roleOf(user) === ROLES.STUDENT;
 
 /** Admins and content managers work across the entire library, not a subset of it. */
@@ -39,6 +40,21 @@ function canManageCourse(user, course) {
   if (!user || !course) return false;
   if (managesWholeLibrary(user)) return true;
   if (isInstructor(user)) return course.owner?.id === user.id;
+  return false;
+}
+
+/**
+ * May this user edit, delete or publish this blog post?
+ *
+ * The spec draws a line here that it does not draw for courses: an admin has
+ * full control over every post "including others'", which only means something
+ * if a content manager's control stops at their own. So authorship is checked
+ * for content managers and waived for admins.
+ */
+function canManagePost(user, post) {
+  if (!user || !post) return false;
+  if (isAdmin(user)) return true;
+  if (isContentManager(user)) return post.author?.id === user.id;
   return false;
 }
 
@@ -124,10 +140,12 @@ module.exports = {
   roleOf,
   isAdmin,
   isInstructor,
+  isContentManager,
   isStudent,
   isStaff,
   managesWholeLibrary,
   canManageCourse,
+  canManagePost,
   loadCourseForAccess,
   courseForContent,
   isEnrolledIn,

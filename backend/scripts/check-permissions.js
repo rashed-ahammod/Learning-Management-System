@@ -525,6 +525,124 @@ async function run() {
   const samAfter = await req('GET', '/api/enrollments', { token: sam.token });
   expect('     and the enrolment', samAfter.json?.data?.length, 2);
 
+  section('only admins and content managers write the blog');
+  const manager2 = await makeUser(admin, 'content-manager', `cm2${stamp}`);
+
+  const postBody = {
+    data: {
+      title: `Draft post ${stamp}`,
+      slug: `draft-post-${stamp}`,
+      body: 'Something worth reading.',
+      author: sam.id, // must be ignored
+    },
+  };
+
+  const post = await req('POST', '/api/blog-posts', { token: manager.token, body: postBody });
+  expect('POST /api/blog-posts   content manager may', post.status, 201);
+
+  const postId = post.json?.data?.documentId;
+  if (postId) {
+    cleanup.push(() => req('DELETE', `/api/blog-posts/${postId}`, { token: admin }));
+  }
+  expect('     author is the creator, not the payload', post.json?.data?.author?.username, `cm${stamp}`);
+
+  expect(
+    'POST /api/blog-posts   an instructor may not',
+    (await req('POST', '/api/blog-posts', { token: alice.token, body: postBody })).status,
+    403
+  );
+  expect(
+    'POST /api/blog-posts   a student may not',
+    (await req('POST', '/api/blog-posts', { token: sam.token, body: postBody })).status,
+    403
+  );
+
+  section('a draft is invisible until it is published');
+  const listHas = (res) => (res.json?.data ?? []).some((p) => p.documentId === postId);
+
+  expect('GET  /api/blog-posts   not in the public list', listHas(await req('GET', '/api/blog-posts')), false);
+  expect('GET  /api/blog-posts/:id  reads as missing', (await req('GET', `/api/blog-posts/${postId}`)).status, 404);
+
+  // The one that matters: Strapi picks the version from ?status, and the
+  // permission system has no opinion on it.
+  expect(
+    'GET  ?status=draft     logged out cannot force it',
+    listHas(await req('GET', '/api/blog-posts?status=draft')),
+    false
+  );
+  expect(
+    'GET  ?status=draft     nor can a student',
+    listHas(await req('GET', '/api/blog-posts?status=draft', { token: sam.token })),
+    false
+  );
+  expect(
+    'GET  ?status=draft     nor an instructor',
+    listHas(await req('GET', '/api/blog-posts?status=draft', { token: alice.token })),
+    false
+  );
+  expect(
+    'GET  ?status=draft     but the author can',
+    listHas(await req('GET', '/api/blog-posts?status=draft', { token: manager.token })),
+    true
+  );
+
+  section('publishing');
+  const emptyPost = await req('POST', '/api/blog-posts', {
+    token: manager.token,
+    body: { data: { title: `Empty post ${stamp}`, slug: `empty-post-${stamp}` } },
+  });
+  const emptyPostId = emptyPost.json?.data?.documentId;
+  if (emptyPostId) {
+    cleanup.push(() => req('DELETE', `/api/blog-posts/${emptyPostId}`, { token: admin }));
+  }
+  expect(
+    'POST :id/publish       refuses an empty post',
+    (await req('POST', `/api/blog-posts/${emptyPostId}/publish`, { token: manager.token })).status,
+    400
+  );
+
+  expect(
+    'POST :id/publish       the author may',
+    (await req('POST', `/api/blog-posts/${postId}/publish`, { token: manager.token })).status,
+    200
+  );
+  expect('GET  /api/blog-posts   now in the public list', listHas(await req('GET', '/api/blog-posts')), true);
+  expect('GET  /api/blog-posts/:id  now readable', (await req('GET', `/api/blog-posts/${postId}`)).status, 200);
+
+  expect(
+    'POST :id/unpublish     takes it back off',
+    (await req('POST', `/api/blog-posts/${postId}/unpublish`, { token: manager.token })).status,
+    200
+  );
+  expect('GET  /api/blog-posts   gone from the list again', listHas(await req('GET', '/api/blog-posts')), false);
+
+  section('a content manager only controls their own posts');
+  expect(
+    'PUT  /api/blog-posts/:id  another CM cannot edit it',
+    (await req('PUT', `/api/blog-posts/${postId}`, { token: manager2.token, body: { data: { title: 'hijacked' } } })).status,
+    403
+  );
+  expect(
+    'POST :id/publish       nor publish it',
+    (await req('POST', `/api/blog-posts/${postId}/publish`, { token: manager2.token })).status,
+    403
+  );
+  expect(
+    'DELETE /api/blog-posts/:id  nor delete it',
+    (await req('DELETE', `/api/blog-posts/${postId}`, { token: manager2.token })).status,
+    403
+  );
+  expect(
+    'PUT  /api/blog-posts/:id  but the admin can',
+    (await req('PUT', `/api/blog-posts/${postId}`, { token: admin, body: { data: { title: `Edited by admin ${stamp}` } } })).status,
+    200
+  );
+  expect(
+    'POST :id/publish       and publish somebody else post',
+    (await req('POST', `/api/blog-posts/${postId}/publish`, { token: admin })).status,
+    200
+  );
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
 }
 

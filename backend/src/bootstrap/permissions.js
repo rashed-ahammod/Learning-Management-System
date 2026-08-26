@@ -6,6 +6,7 @@ const ENROLLMENT = 'api::enrollment.enrollment';
 const PROGRESS = 'api::lesson-progress.lesson-progress';
 const QUIZ = 'api::quiz.quiz';
 const QUIZ_ATTEMPT = 'api::quiz-attempt.quiz-attempt';
+const BLOG = 'api::blog-post.blog-post';
 
 /**
  * Progress has no generated CRUD - see its routes file. These are the three
@@ -19,6 +20,9 @@ const SEE_STUDENT_PROGRESS = [`${PROGRESS}.students`];
  * one, so a student cannot post themselves a score.
  */
 const TAKE_QUIZZES = [`${QUIZ_ATTEMPT}.submit`, `${QUIZ_ATTEMPT}.mine`];
+
+/** Writing the blog, including moving a post between draft and published. */
+const MANAGE_BLOG = [`${BLOG}.publish`, `${BLOG}.unpublish`];
 
 const readOnly = (uid) => [`${uid}.find`, `${uid}.findOne`];
 const fullAccess = (uid) => [...readOnly(uid), `${uid}.create`, `${uid}.update`, `${uid}.delete`];
@@ -49,6 +53,7 @@ const PERMISSIONS = {
     'plugin::users-permissions.auth.callback', // POST /api/auth/local          -> login
     'plugin::users-permissions.auth.register', // POST /api/auth/local/register -> signup
     ...readOnly(COURSE),
+    ...readOnly(BLOG), // only published posts - enforced in the controller
   ],
 
   // Can do everything, including managing users and their roles.
@@ -58,6 +63,8 @@ const PERMISSIONS = {
     ...fullAccess(LESSON),
     ...fullAccess(ENROLLMENT),
     ...fullAccess(QUIZ),
+    ...fullAccess(BLOG),
+    ...MANAGE_BLOG,
     `${QUIZ_ATTEMPT}.remove`,
     ...SEE_STUDENT_PROGRESS,
     'plugin::users-permissions.user.find',
@@ -76,6 +83,8 @@ const PERMISSIONS = {
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT), // to see who is enrolled and how far along they are
     ...fullAccess(QUIZ),
+    ...fullAccess(BLOG),
+    ...MANAGE_BLOG,
     ...SEE_STUDENT_PROGRESS,
   ],
 
@@ -87,6 +96,7 @@ const PERMISSIONS = {
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT),
     ...fullAccess(QUIZ),
+    ...readOnly(BLOG), // instructors read the blog, they do not write it
     ...SEE_STUDENT_PROGRESS,
   ],
 
@@ -100,6 +110,7 @@ const PERMISSIONS = {
     ...TRACK_OWN_PROGRESS,
     ...readOnly(QUIZ),
     ...TAKE_QUIZZES,
+    ...readOnly(BLOG),
   ],
 };
 
