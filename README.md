@@ -54,12 +54,24 @@ Updated as modules land.
 
 - [x] Authentication + role-based access
 - [ ] Course management
-- [ ] Course enrollment
+- [x] Course enrollment
 - [ ] Lesson viewing
 - [ ] Progress tracking
 - [ ] Quiz with auto-grading
 - [ ] Admin panel
 - [ ] Blog with draft/publish
+
+## Sample data
+
+An empty install works perfectly and shows you nothing, so there is a seed:
+
+```bash
+cd backend && npm run seed:demo
+```
+
+It adds a content manager, an instructor and a student, two courses with
+lessons, a quiz, and a published post plus a draft. Running it twice is safe -
+anything already there is left alone. It prints the logins when it finishes.
 
 ## Checking it works
 

@@ -12,6 +12,17 @@ export class StrapiError extends Error {
   }
 }
 
+/**
+ * Did Strapi turn our token down?
+ *
+ * 401 is the token itself being no good - expired, revoked, or invented. 403 is
+ * a valid token without the right permission, which is a different problem and
+ * deliberately not included here.
+ */
+export function isRejectedToken(error: unknown): boolean {
+  return error instanceof StrapiError && error.status === 401;
+}
+
 type Options = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;

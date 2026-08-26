@@ -69,6 +69,13 @@ async function run() {
 
   section('a student');
   expect('GET /my-courses  allowed', (await go('/my-courses', 'student')).status, 200);
+  // ...but "allowed" only means the page rendered. The cookie above is forged,
+  // so Strapi rejects the token inside it and the page comes back with nothing
+  // in it. This is the whole point: the proxy decides which page, the backend
+  // decides what is on it.
+  const forged = await fetch(`${BASE}/my-courses`, { headers: { cookie: cookieFor('student') } });
+  const forgedHtml = await forged.text();
+  expect('     but a forged cookie gets no data', /session is no longer valid/i.test(forgedHtml), true);
   expect('GET /manage      turned away', (await go('/manage', 'student')).to, '/unauthorized');
   expect('GET /admin       turned away', (await go('/admin', 'student')).to, '/unauthorized');
   expect('GET /dashboard   sent to their own page', (await go('/dashboard', 'student')).to, '/my-courses');
