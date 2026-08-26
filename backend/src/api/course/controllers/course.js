@@ -1,6 +1,7 @@
 'use strict';
 
 const { createCoreController } = require('@strapi/strapi').factories;
+const { restrictFilters } = require('../../../utils/access');
 
 const UID = 'api::course.course';
 
@@ -52,13 +53,35 @@ function presentCourse(sanitized, raw) {
 }
 
 module.exports = createCoreController(UID, ({ strapi }) => ({
+  /**
+   * `?mine=true` narrows the list to courses the caller owns.
+   *
+   * There is an obvious way to do this from the client - filters[owner][id][$eq]
+   * - and it does not work. Strapi validates query filters against the caller's
+   * *field* permissions, and an instructor has no permission on the users table,
+   * so filtering on the owner relation is rejected outright with "Invalid key
+   * owner" before the query is ever run.
+   *
+   * So the flag is handled here instead. It is stripped from the query before
+   * validation (Strapi rejects keys it does not recognise) and turned into a
+   * filter afterwards, where it counts as trusted server state rather than
+   * client input - and where the user id comes from the token, not the URL.
+   */
   async find(ctx) {
+    const { mine, ...rest } = ctx.query;
+    ctx.query = rest;
+
     await this.validateQuery(ctx);
     const query = await this.sanitizeQuery(ctx);
 
+    const scoped =
+      mine === 'true' && ctx.state.user
+        ? restrictFilters(query, { owner: { id: ctx.state.user.id } })
+        : query;
+
     const { results, pagination } = await strapi
       .service(UID)
-      .find({ ...query, populate: COURSE_POPULATE });
+      .find({ ...scoped, populate: COURSE_POPULATE });
 
     const sanitized = await this.sanitizeOutput(results, ctx);
 

@@ -34,11 +34,14 @@ export async function listCoursesIOwn(): Promise<Course[]> {
 
   if (!session) return [];
 
-  const ownerFilter =
-    session.role === 'instructor' ? `&filters[owner][id][$eq]=${session.userId}` : '';
+  // ?mine=true rather than a filter on the owner relation: Strapi checks query
+  // filters against the caller's field permissions, and an instructor cannot
+  // read the users table, so filtering by owner is refused. The backend turns
+  // this flag into the same filter using the id from the token.
+  const scope = session.role === 'instructor' ? '&mine=true' : '';
 
   const response = await strapiFetch<Paginated<Course>>(
-    `/api/courses?${catalogueQuery(1, 100)}${ownerFilter}`,
+    `/api/courses?${catalogueQuery(1, 100)}${scope}`,
     { token: session.jwt }
   );
 

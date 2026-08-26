@@ -42,6 +42,21 @@ async function req(method, path, { token, body } = {}) {
   return { status: res.status, json };
 }
 
+/**
+ * Strapi rate-limits /api/auth/local, and this suite signs in seven times.
+ *
+ * Run it twice inside the window and every login after the tenth comes back 429
+ * with no token - which shows up as forty-odd unrelated assertions failing at
+ * once. Saying so plainly is worth the few lines.
+ */
+function stopIfRateLimited(response, who) {
+  if (response.status !== 429) return;
+
+  console.error(`\nStrapi is rate-limiting sign-ins, so ${who} could not log in.`);
+  console.error('This suite signs in several times; give it a minute and run it again.\n');
+  process.exit(1);
+}
+
 function expect(label, actual, wanted) {
   const ok = actual === wanted;
   const detail = ok ? '' : `   (expected ${wanted})`;
@@ -75,6 +90,7 @@ async function makeUser(adminToken, roleType, tag) {
   const login = await req('POST', '/api/auth/local', {
     body: { identifier: email, password: PASSWORD },
   });
+  stopIfRateLimited(login, tag);
 
   return { id: created.json?.id, token: login.json?.jwt };
 }
@@ -90,6 +106,8 @@ async function run() {
   const adminLogin = await req('POST', '/api/auth/local', {
     body: { identifier: ADMIN_EMAIL, password: ADMIN_PASSWORD },
   });
+  stopIfRateLimited(adminLogin, 'the seeded admin');
+
   const admin = adminLogin.json?.jwt;
 
   if (!admin) {
@@ -169,6 +187,39 @@ async function run() {
     'PUT    content manager edits any course',
     (await req('PUT', `/api/courses/${courseId}`, { token: manager.token, body: { data: { description: 'cm was here' } } })).status,
     200
+  );
+
+  section('?mine=true scopes the list to your own courses');
+  const bobCourse = await req('POST', '/api/courses', {
+    token: bob.token,
+    body: { data: { title: `Bob course ${stamp}`, slug: `bob-course-${stamp}` } },
+  });
+  if (bobCourse.json?.data?.documentId) {
+    cleanup.push(() => req('DELETE', `/api/courses/${bobCourse.json.data.documentId}`, { token: admin }));
+  }
+
+  const aliceMine = await req('GET', '/api/courses?mine=true', { token: alice.token });
+  expect('GET  ?mine=true        Alice gets at least one', aliceMine.json?.data?.length >= 1, true);
+  expect(
+    '     and every one of them is hers',
+    aliceMine.json?.data?.every((c) => c.owner?.username === `alice${stamp}`),
+    true
+  );
+
+  const bobMine = await req('GET', '/api/courses?mine=true', { token: bob.token });
+  expect(
+    'GET  ?mine=true        Bob gets only his',
+    bobMine.json?.data?.every((c) => c.owner?.username === `bob${stamp}`),
+    true
+  );
+
+  // The flag reads the id from the token, so there is nothing in the URL to aim
+  // elsewhere - and filtering on the owner relation is refused outright, which
+  // is the reason the flag exists at all.
+  expect(
+    '     filtering by owner is refused anyway',
+    (await req('GET', `/api/courses?filters[owner][id][$eq]=${alice.id}`, { token: bob.token })).status,
+    400
   );
 
   section('lessons inherit the permissions of their course');

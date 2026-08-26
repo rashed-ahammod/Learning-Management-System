@@ -53,7 +53,7 @@ empty state if Strapi isn't up.
 Updated as modules land.
 
 - [x] Authentication + role-based access
-- [ ] Course management
+- [x] Course management
 - [x] Course enrollment
 - [x] Lesson viewing
 - [x] Progress tracking
