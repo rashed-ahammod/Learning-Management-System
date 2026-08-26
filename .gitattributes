@@ -1,0 +1,9 @@
+# Keep line endings consistent for everyone cloning this repo,
+# regardless of the OS they work on.
+* text=auto eol=lf
+
+# Binary files git should not touch
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
