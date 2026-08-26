@@ -264,6 +264,93 @@ async function run() {
   const bobSees = await req('GET', '/api/enrollments', { token: bob.token });
   expect('     Bob sees none, he owns no courses', bobSees.json?.data?.length, 0);
 
+  section('progress tracking');
+  const lessonTwo = await req('POST', '/api/lessons', {
+    token: alice.token,
+    body: { data: { title: 'Lesson two', order: 2, content: 'More', course: courseId } },
+  });
+  const lessonTwoId = lessonTwo.json?.data?.documentId;
+  if (lessonTwoId) {
+    cleanup.push(() => req('DELETE', `/api/lessons/${lessonTwoId}`, { token: admin }));
+  }
+
+  const mark = (token, id, completed) =>
+    req('PUT', `/api/lessons/${id}/progress`, { token, body: { completed } });
+
+  // Progress rows have no CRUD route, so they are cleared the same way they were
+  // set. Registered here so it runs before the lessons and users are removed.
+  cleanup.push(() => mark(sam.token, lessonId, false));
+
+  const first = await mark(sam.token, lessonId, true);
+  expect('PUT  lesson/progress   mark complete', first.status, 200);
+  expect('     1 of 2 lessons is 50%', first.json?.data?.percentage, 50);
+
+  const again = await mark(sam.token, lessonId, true);
+  expect('     marking it twice changes nothing', again.json?.data?.percentage, 50);
+
+  const both = await mark(sam.token, lessonTwoId, true);
+  expect('     2 of 2 lessons is 100%', both.json?.data?.percentage, 100);
+
+  const undone = await mark(sam.token, lessonTwoId, false);
+  expect('     un-marking drops it back', undone.json?.data?.percentage, 50);
+
+  expect(
+    'PUT  lesson/progress   completed must be boolean',
+    (await req('PUT', `/api/lessons/${lessonId}/progress`, { token: sam.token, body: { completed: 'yes' } })).status,
+    400
+  );
+  expect('PUT  lesson/progress   not enrolled', (await mark(zoe.token, lessonId, true)).status, 403);
+
+  section('progress is per student, per course');
+  const samProgress = await req('GET', `/api/courses/${courseId}/progress`, { token: sam.token });
+  expect('GET  course/progress   Sam is at 50%', samProgress.json?.data?.percentage, 50);
+  expect('     and knows which lesson', samProgress.json?.data?.completedLessonIds?.length, 1);
+
+  const zoeProgress = await req('GET', `/api/courses/${courseId}/progress`, { token: zoe.token });
+  expect('GET  course/progress   Zoe is still at 0%', zoeProgress.json?.data?.percentage, 0);
+
+  section('who may see student progress');
+  const aliceView = await req('GET', `/api/courses/${courseId}/progress/students`, { token: alice.token });
+  expect('GET  progress/students Alice owns the course', aliceView.status, 200);
+  expect('     and sees Sam at 50%', aliceView.json?.data?.students?.[0]?.percentage, 50);
+  expect('     without exposing his email', aliceView.json?.data?.students?.[0]?.email, undefined);
+  expect(
+    'GET  progress/students Bob owns nothing here',
+    (await req('GET', `/api/courses/${courseId}/progress/students`, { token: bob.token })).status,
+    403
+  );
+  expect(
+    'GET  progress/students content manager may',
+    (await req('GET', `/api/courses/${courseId}/progress/students`, { token: manager.token })).status,
+    200
+  );
+  expect(
+    'GET  progress/students a student may not',
+    (await req('GET', `/api/courses/${courseId}/progress/students`, { token: sam.token })).status,
+    403
+  );
+
+  section('a course with no lessons yet');
+  const empty = await req('POST', '/api/courses', {
+    token: alice.token,
+    body: { data: { title: `Empty course ${stamp}`, slug: `empty-course-${stamp}` } },
+  });
+  const emptyId = empty.json?.data?.documentId;
+  if (emptyId) {
+    cleanup.push(() => req('DELETE', `/api/courses/${emptyId}`, { token: admin }));
+  }
+
+  const emptyEnrol = await req('POST', '/api/enrollments', {
+    token: sam.token,
+    body: { data: { course: emptyId } },
+  });
+  if (emptyEnrol.json?.data?.documentId) {
+    cleanup.push(() => req('DELETE', `/api/enrollments/${emptyEnrol.json.data.documentId}`, { token: admin }));
+  }
+
+  const emptyProgress = await req('GET', `/api/courses/${emptyId}/progress`, { token: sam.token });
+  expect('GET  course/progress   0 of 0 lessons is 0%, not NaN', emptyProgress.json?.data?.percentage, 0);
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
 }
 

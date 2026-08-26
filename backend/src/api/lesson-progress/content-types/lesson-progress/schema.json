@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "lesson_progresses",
+  "info": {
+    "singularName": "lesson-progress",
+    "pluralName": "lesson-progresses",
+    "displayName": "Lesson Progress",
+    "description": "One row per lesson a student has marked complete. The row existing is what complete means - there is no boolean flag that could drift out of sync with reality. Un-marking a lesson deletes the row."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "student": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "lesson": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::lesson.lesson"
+    },
+    "course": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::course.course"
+    },
+    "completedAt": {
+      "type": "datetime"
+    }
+  }
+}

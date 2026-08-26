@@ -3,6 +3,14 @@
 const COURSE = 'api::course.course';
 const LESSON = 'api::lesson.lesson';
 const ENROLLMENT = 'api::enrollment.enrollment';
+const PROGRESS = 'api::lesson-progress.lesson-progress';
+
+/**
+ * Progress has no generated CRUD - see its routes file. These are the three
+ * custom handlers, and they are the only way into the table.
+ */
+const TRACK_OWN_PROGRESS = [`${PROGRESS}.set`, `${PROGRESS}.mine`];
+const SEE_STUDENT_PROGRESS = [`${PROGRESS}.students`];
 
 const readOnly = (uid) => [`${uid}.find`, `${uid}.findOne`];
 const fullAccess = (uid) => [...readOnly(uid), `${uid}.create`, `${uid}.update`, `${uid}.delete`];
@@ -41,6 +49,7 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...fullAccess(ENROLLMENT),
+    ...SEE_STUDENT_PROGRESS,
     'plugin::users-permissions.user.find',
     'plugin::users-permissions.user.findOne',
     'plugin::users-permissions.user.create',
@@ -56,6 +65,7 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT), // to see who is enrolled and how far along they are
+    ...SEE_STUDENT_PROGRESS,
   ],
 
   // Same endpoints as a content manager, but the policies limit every write
@@ -65,6 +75,7 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT),
+    ...SEE_STUDENT_PROGRESS,
   ],
 
   // Reads content and enrols. No write access to courses or lessons at all.
@@ -74,6 +85,7 @@ const PERMISSIONS = {
     ...readOnly(LESSON),
     ...readOnly(ENROLLMENT),
     `${ENROLLMENT}.create`,
+    ...TRACK_OWN_PROGRESS,
   ],
 };
 
