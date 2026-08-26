@@ -4,6 +4,8 @@ const COURSE = 'api::course.course';
 const LESSON = 'api::lesson.lesson';
 const ENROLLMENT = 'api::enrollment.enrollment';
 const PROGRESS = 'api::lesson-progress.lesson-progress';
+const QUIZ = 'api::quiz.quiz';
+const QUIZ_ATTEMPT = 'api::quiz-attempt.quiz-attempt';
 
 /**
  * Progress has no generated CRUD - see its routes file. These are the three
@@ -11,6 +13,12 @@ const PROGRESS = 'api::lesson-progress.lesson-progress';
  */
 const TRACK_OWN_PROGRESS = [`${PROGRESS}.set`, `${PROGRESS}.mine`];
 const SEE_STUDENT_PROGRESS = [`${PROGRESS}.students`];
+
+/**
+ * Attempts have no generated CRUD either - submitting is the only way to create
+ * one, so a student cannot post themselves a score.
+ */
+const TAKE_QUIZZES = [`${QUIZ_ATTEMPT}.submit`, `${QUIZ_ATTEMPT}.mine`];
 
 const readOnly = (uid) => [`${uid}.find`, `${uid}.findOne`];
 const fullAccess = (uid) => [...readOnly(uid), `${uid}.create`, `${uid}.update`, `${uid}.delete`];
@@ -49,6 +57,8 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...fullAccess(ENROLLMENT),
+    ...fullAccess(QUIZ),
+    `${QUIZ_ATTEMPT}.remove`,
     ...SEE_STUDENT_PROGRESS,
     'plugin::users-permissions.user.find',
     'plugin::users-permissions.user.findOne',
@@ -65,6 +75,7 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT), // to see who is enrolled and how far along they are
+    ...fullAccess(QUIZ),
     ...SEE_STUDENT_PROGRESS,
   ],
 
@@ -75,6 +86,7 @@ const PERMISSIONS = {
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
     ...readOnly(ENROLLMENT),
+    ...fullAccess(QUIZ),
     ...SEE_STUDENT_PROGRESS,
   ],
 
@@ -86,6 +98,8 @@ const PERMISSIONS = {
     ...readOnly(ENROLLMENT),
     `${ENROLLMENT}.create`,
     ...TRACK_OWN_PROGRESS,
+    ...readOnly(QUIZ),
+    ...TAKE_QUIZZES,
   ],
 };
 

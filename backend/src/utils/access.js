@@ -52,6 +52,30 @@ async function loadCourseForAccess(strapi, documentId) {
   });
 }
 
+/**
+ * Finds the course a piece of course content belongs to, for a write request.
+ *
+ * Lessons and quizzes have no owner of their own - they inherit whatever their
+ * course allows. Which course that is depends on the request: when creating, it
+ * comes from the payload; when updating or deleting, from the record being
+ * touched. That second case is the one that matters, because without it an
+ * instructor could edit any lesson or quiz on the platform just by knowing its id.
+ */
+async function courseForContent(strapi, uid, policyContext) {
+  const documentId = policyContext.params.id;
+
+  if (!documentId) {
+    return loadCourseForAccess(strapi, policyContext.request.body?.data?.course);
+  }
+
+  const record = await strapi.documents(uid).findOne({
+    documentId,
+    populate: { course: { fields: ['documentId'] } },
+  });
+
+  return loadCourseForAccess(strapi, record?.course?.documentId);
+}
+
 async function isEnrolledIn(strapi, userId, courseDocumentId) {
   if (!userId || !courseDocumentId) return false;
 
@@ -105,6 +129,7 @@ module.exports = {
   managesWholeLibrary,
   canManageCourse,
   loadCourseForAccess,
+  courseForContent,
   isEnrolledIn,
   enrolledCourseIds,
   restrictFilters,

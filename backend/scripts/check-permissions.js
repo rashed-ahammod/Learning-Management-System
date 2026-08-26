@@ -351,6 +351,180 @@ async function run() {
   const emptyProgress = await req('GET', `/api/courses/${emptyId}/progress`, { token: sam.token });
   expect('GET  course/progress   0 of 0 lessons is 0%, not NaN', emptyProgress.json?.data?.percentage, 0);
 
+  section('quizzes belong to whoever owns the course');
+  const quizBody = (title) => ({
+    data: {
+      title,
+      course: courseId,
+      questions: [
+        { text: 'Two plus two?', options: ['3', '4', '5'], correctIndex: 1 },
+        { text: 'Capital of France?', options: ['Lyon', 'Paris'], correctIndex: 1 },
+      ],
+    },
+  });
+
+  const quiz = await req('POST', '/api/quizzes', { token: alice.token, body: quizBody(`Quiz ${stamp}`) });
+  expect('POST /api/quizzes      Alice owns the course', quiz.status, 201);
+
+  const quizId = quiz.json?.data?.documentId;
+  if (quizId) {
+    cleanup.push(() => req('DELETE', `/api/quizzes/${quizId}`, { token: admin }));
+  }
+
+  expect(
+    'POST /api/quizzes      Bob does not',
+    (await req('POST', '/api/quizzes', { token: bob.token, body: quizBody('nope') })).status,
+    403
+  );
+  expect(
+    'PUT  /api/quizzes/:id  Bob cannot edit hers',
+    (await req('PUT', `/api/quizzes/${quizId}`, { token: bob.token, body: { data: { title: 'hijacked' } } })).status,
+    403
+  );
+
+  section('a quiz has to be answerable');
+  const badQuiz = (questions) =>
+    req('POST', '/api/quizzes', {
+      token: alice.token,
+      body: { data: { title: 'bad', course: courseId, questions } },
+    });
+
+  expect(
+    '     correctIndex past the last option',
+    (await badQuiz([{ text: 'q', options: ['a', 'b'], correctIndex: 5 }])).status,
+    400
+  );
+  expect(
+    '     a single option is not a choice',
+    (await badQuiz([{ text: 'q', options: ['a'], correctIndex: 0 }])).status,
+    400
+  );
+  expect('     no questions at all', (await badQuiz([])).status, 400);
+
+  section('the answer key never reaches a student');
+  const staffView = await req('GET', `/api/quizzes/${quizId}`, { token: alice.token });
+  expect('GET  /api/quizzes/:id  staff do see correctIndex', staffView.json?.data?.questions?.[0]?.correctIndex, 1);
+
+  const studentView = await req('GET', `/api/quizzes/${quizId}`, { token: sam.token });
+  expect('GET  /api/quizzes/:id  enrolled student may read', studentView.status, 200);
+  expect('     gets the question text', studentView.json?.data?.questions?.[0]?.text, 'Two plus two?');
+  expect('     gets all three options', studentView.json?.data?.questions?.[0]?.options?.length, 3);
+  expect('     but NOT correctIndex', studentView.json?.data?.questions?.[0]?.correctIndex, undefined);
+  expect(
+    '     nor through ?populate=questions',
+    (await req('GET', `/api/quizzes/${quizId}?populate=questions`, { token: sam.token })).json?.data?.questions?.[0]
+      ?.correctIndex,
+    undefined
+  );
+  expect(
+    'GET  /api/quizzes/:id  not enrolled',
+    (await req('GET', `/api/quizzes/${quizId}`, { token: zoe.token })).status,
+    403
+  );
+
+  section('auto-grading');
+  const questions = studentView.json?.data?.questions ?? [];
+  const submit = (token, answers) =>
+    req('POST', `/api/quizzes/${quizId}/attempts`, { token, body: { answers } });
+
+  const keepAttempt = (res) => {
+    const id = res.json?.data?.id;
+    if (id) cleanup.push(() => req('DELETE', `/api/quiz-attempts/${id}`, { token: admin }));
+    return res;
+  };
+
+  const allRight = keepAttempt(
+    await submit(sam.token, [
+      { questionId: questions[0]?.id, selectedIndex: 1 },
+      { questionId: questions[1]?.id, selectedIndex: 1 },
+    ])
+  );
+  expect('POST quiz/attempts     both answers right', allRight.status, 201);
+  expect('     scores 2 of 2', allRight.json?.data?.score, 2);
+  expect('     which is 100%', allRight.json?.data?.percentage, 100);
+
+  const half = keepAttempt(
+    await submit(sam.token, [
+      { questionId: questions[0]?.id, selectedIndex: 1 },
+      { questionId: questions[1]?.id, selectedIndex: 0 },
+    ])
+  );
+  expect('     one of two is 50%', half.json?.data?.percentage, 50);
+
+  const blank = keepAttempt(await submit(sam.token, []));
+  expect('     unanswered counts as wrong', blank.json?.data?.percentage, 0);
+
+  expect(
+    '     the stored answers carry no key',
+    JSON.stringify(allRight.json?.data?.answers ?? []).includes('correctIndex'),
+    false
+  );
+  expect('POST quiz/attempts     not enrolled', (await submit(zoe.token, [])).status, 403);
+  expect(
+    'POST quiz/attempts     answers must be an array',
+    (await req('POST', `/api/quizzes/${quizId}/attempts`, { token: sam.token, body: { answers: 'all of them' } }))
+      .status,
+    400
+  );
+
+  section('results are stored and stay private');
+  const samResults = await req('GET', `/api/quizzes/${quizId}/attempts`, { token: sam.token });
+  expect('GET  quiz/attempts     all three kept', samResults.json?.data?.length, 3);
+  expect('     newest first', samResults.json?.data?.[0]?.percentage, 0);
+
+  const zoeResults = await req('GET', `/api/quizzes/${quizId}/attempts`, { token: zoe.token });
+  expect('     Zoe sees none belonging to Sam', zoeResults.json?.data?.length, 0);
+
+  section('deleting a course takes its contents with it');
+  // Everything below hangs off the course, and the ownership policies work out
+  // permission *from* the course - so anything left behind would be permanently
+  // unreachable, not merely untidy.
+  const doomed = await req('POST', '/api/courses', {
+    token: alice.token,
+    body: { data: { title: `Doomed ${stamp}`, slug: `doomed-${stamp}` } },
+  });
+  const doomedId = doomed.json?.data?.documentId;
+
+  const doomedLesson = await req('POST', '/api/lessons', {
+    token: alice.token,
+    body: { data: { title: 'Doomed lesson', order: 1, course: doomedId } },
+  });
+  const doomedQuiz = await req('POST', '/api/quizzes', {
+    token: alice.token,
+    body: {
+      data: {
+        title: 'Doomed quiz',
+        course: doomedId,
+        questions: [{ text: 'q', options: ['a', 'b'], correctIndex: 0 }],
+      },
+    },
+  });
+  await req('POST', '/api/enrollments', { token: sam.token, body: { data: { course: doomedId } } });
+  await mark(sam.token, doomedLesson.json?.data?.documentId, true);
+  await req('POST', `/api/quizzes/${doomedQuiz.json?.data?.documentId}/attempts`, {
+    token: sam.token,
+    body: { answers: [] },
+  });
+
+  expect(
+    'DELETE /api/courses/:id  removes the course',
+    (await req('DELETE', `/api/courses/${doomedId}`, { token: alice.token })).status,
+    204
+  );
+  expect(
+    '     its lessons are gone too',
+    (await req('GET', `/api/lessons/${doomedLesson.json?.data?.documentId}`, { token: alice.token })).status,
+    404
+  );
+  expect(
+    '     and its quiz',
+    (await req('GET', `/api/quizzes/${doomedQuiz.json?.data?.documentId}`, { token: alice.token })).status,
+    404
+  );
+
+  const samAfter = await req('GET', '/api/enrollments', { token: sam.token });
+  expect('     and the enrolment', samAfter.json?.data?.length, 2);
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
 }
 
