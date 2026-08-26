@@ -46,7 +46,11 @@ function expect(label, actual, wanted) {
   const ok = actual === wanted;
   const detail = ok ? '' : `   (expected ${wanted})`;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${label.padEnd(54)} ${actual}${detail}`);
-  ok ? (passed += 1) : (failed += 1);
+  if (ok) {
+    passed += 1;
+  } else {
+    failed += 1;
+  }
 }
 
 function section(name) {

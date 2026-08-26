@@ -52,7 +52,7 @@ empty state if Strapi isn't up.
 
 Updated as modules land.
 
-- [ ] Authentication + role-based access
+- [x] Authentication + role-based access
 - [ ] Course management
 - [ ] Course enrollment
 - [ ] Lesson viewing
@@ -60,6 +60,21 @@ Updated as modules land.
 - [ ] Quiz with auto-grading
 - [ ] Admin panel
 - [ ] Blog with draft/publish
+
+## Checking it works
+
+Three scripts assert the behaviour that is easy to get quietly wrong. Start the
+app first - each says which halves it needs.
+
+```bash
+cd backend  && npm run check:permissions   # every role against every endpoint
+cd frontend && npm run check:guards        # which roles may open which pages
+cd frontend && npm run check:login         # signing in, end to end
+```
+
+`check:permissions` is the important one. It calls the API directly as each
+role, including the requests the UI never offers a button for, because a
+permission leak looks exactly like a working app from the browser.
 
 ## Deployment
 
