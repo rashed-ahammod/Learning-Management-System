@@ -23,6 +23,14 @@ export function isRejectedToken(error: unknown): boolean {
   return error instanceof StrapiError && error.status === 401;
 }
 
+/**
+ * A valid token without the permission for this row - which is a different thing
+ * from a bad token, and usually means "you have not enrolled in this yet".
+ */
+export function isForbidden(error: unknown): boolean {
+  return error instanceof StrapiError && error.status === 403;
+}
+
 type Options = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;

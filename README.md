@@ -55,8 +55,8 @@ Updated as modules land.
 - [x] Authentication + role-based access
 - [ ] Course management
 - [x] Course enrollment
-- [ ] Lesson viewing
-- [ ] Progress tracking
+- [x] Lesson viewing
+- [x] Progress tracking
 - [ ] Quiz with auto-grading
 - [ ] Admin panel
 - [ ] Blog with draft/publish
