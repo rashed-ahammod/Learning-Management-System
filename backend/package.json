@@ -14,7 +14,8 @@
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry",
     "check:permissions": "node scripts/check-permissions.js",
-    "seed:demo": "node scripts/seed-demo.js"
+    "seed:demo": "node scripts/seed-demo.js",
+    "check:matrix": "node scripts/check-matrix.js"
   },
   "dependencies": {
     "@strapi/database": "5.52.2",

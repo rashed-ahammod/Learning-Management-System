@@ -111,10 +111,15 @@ Three scripts assert the behaviour that is easy to get quietly wrong. Start the
 app first - each says which halves it needs.
 
 ```bash
+cd backend  && npm run check:matrix        # the brief's permission table, cell by cell
 cd backend  && npm run check:permissions   # every role against every endpoint
 cd frontend && npm run check:guards        # which roles may open which pages
 cd frontend && npm run check:login         # signing in, end to end
 ```
+
+`check:matrix` prints the permission table from the brief with the real HTTP
+status behind every cell, so the implementation can be read straight against the
+spec - including the rows that say "own only" and "own courses".
 
 `check:permissions` is the important one. It calls the API directly as each
 role, including the requests the UI never offers a button for, because a

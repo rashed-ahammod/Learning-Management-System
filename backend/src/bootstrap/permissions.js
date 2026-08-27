@@ -62,7 +62,19 @@ const PERMISSIONS = {
     ...OWN_ACCOUNT,
     ...fullAccess(COURSE),
     ...fullAccess(LESSON),
-    ...fullAccess(ENROLLMENT),
+    /**
+     * Everything on enrolments except creating one.
+     *
+     * "Admin can do everything" is the role description, but the matrix is
+     * specific: enrolling is a student action and no other role has it. An
+     * admin enrolling *themselves* would not be oversight - it would make them
+     * a student with extra powers, which is a fifth role nobody asked for.
+     * Reading, editing and removing other people's enrolments is the oversight
+     * part, and that stays.
+     */
+    ...readOnly(ENROLLMENT),
+    `${ENROLLMENT}.update`,
+    `${ENROLLMENT}.delete`,
     ...fullAccess(QUIZ),
     ...fullAccess(BLOG),
     ...MANAGE_BLOG,
