@@ -5,6 +5,7 @@ import EnrollButton from '@/components/EnrollButton';
 import ProgressBar from '@/components/ProgressBar';
 import { getSession } from '@/lib/auth';
 import { getCourseBySlug, getCourseProgress, isEnrolledIn } from '@/lib/courses';
+import { canManageCourse } from '@/lib/permissions';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -30,11 +31,27 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
   const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
 
+  // Staff reach this page from the editor's "View as a student" link. Without a
+  // way back they are stranded in the student view, since the only other exit
+  // is the public catalogue - so offer the return trip to whoever came from it.
+  const canEdit = canManageCourse(session, course);
+
   return (
     <article>
-      <Link href="/" className="text-sm text-slate-500 transition hover:text-slate-900">
-        ← All courses
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/" className="text-sm text-slate-500 transition hover:text-slate-900">
+          ← All courses
+        </Link>
+
+        {canEdit ? (
+          <Link
+            href={`/manage/courses/${course.slug}`}
+            className="text-sm text-slate-500 transition hover:text-slate-900"
+          >
+            ← Back to editing
+          </Link>
+        ) : null}
+      </div>
 
       <header className="mt-4">
         <h1 className="text-2xl font-semibold tracking-tight">{course.title}</h1>
