@@ -3,8 +3,22 @@
 A Learning Management System built with **Next.js** (frontend) and **Strapi** (headless CMS /
 backend), with four user roles: Admin, Content Manager, Instructor and Student.
 
-- **Frontend** — <!-- VERCEL_URL --> _add your Vercel link here_
-- **Backend** — <!-- RAILWAY_URL --> _add your Railway link here_
+**Live:**
+
+- **App** — https://learning-management-system-gamma-six.vercel.app
+- **API** — https://learning-management-system-production-9abf.up.railway.app
+
+Sign in with any of these to look around (all share the password `Demo1234!`):
+
+| Email | Role | Lands on |
+|---|---|---|
+| `sadia@lms.test` | Student | My courses — enrolled, with progress |
+| `rahim@lms.test` | Instructor | Manage — owns one course |
+| `nadia@lms.test` | Content Manager | Manage — all courses, plus the blog |
+
+Worth trying: open a course while signed out and you get the lesson **titles** but no
+lesson bodies and nothing to click - the backend refuses lesson content to anyone who is
+not enrolled. Sign in as Sadia and the same page gains a progress bar and working links.
 
 ## Repository layout
 
