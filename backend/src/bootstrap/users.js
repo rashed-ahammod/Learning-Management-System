@@ -31,8 +31,21 @@ async function seedAdminUser(strapi) {
 
   if (!email || !password) return;
 
+  const username = process.env.SEED_ADMIN_USERNAME || 'admin';
   const users = strapi.query('plugin::users-permissions.user');
-  const existing = await users.findOne({ where: { email: email.toLowerCase() } });
+
+  /**
+   * Both fields have to be checked, not just the email.
+   *
+   * Strapi enforces uniqueness on the username as well, so an admin who changes
+   * their own email address leaves this looking for someone who no longer
+   * exists - while the username is still very much taken. The create then fails
+   * on a constraint, and because this runs during bootstrap it takes the whole
+   * application down with it rather than just skipping the seed.
+   */
+  const existing = await users.findOne({
+    where: { $or: [{ email: email.toLowerCase() }, { username }] },
+  });
 
   if (existing) return;
 
@@ -47,7 +60,7 @@ async function seedAdminUser(strapi) {
 
   // add() goes through the users-permissions service so the password is hashed.
   await strapi.plugin('users-permissions').service('user').add({
-    username: process.env.SEED_ADMIN_USERNAME || 'admin',
+    username,
     email: email.toLowerCase(),
     password,
     provider: 'local',
@@ -59,4 +72,23 @@ async function seedAdminUser(strapi) {
   strapi.log.info(`[bootstrap] seeded admin account for ${email}`);
 }
 
-module.exports = { setDefaultSignupRole, seedAdminUser };
+/**
+ * Seeding is a convenience, so it is not allowed to stop the app starting.
+ *
+ * The check above should make a clash impossible, but this is the more
+ * important guarantee: whatever goes wrong creating one optional account, a
+ * running platform with all its data should not be replaced by a crash loop
+ * over it. The failure is logged loudly and boot continues.
+ */
+async function seedAdminUserSafely(strapi) {
+  try {
+    await seedAdminUser(strapi);
+  } catch (error) {
+    strapi.log.error(
+      `[bootstrap] could not seed the admin account: ${error.message}. ` +
+        'Starting anyway - existing accounts are unaffected.'
+    );
+  }
+}
+
+module.exports = { setDefaultSignupRole, seedAdminUser: seedAdminUserSafely };
