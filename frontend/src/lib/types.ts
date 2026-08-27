@@ -135,3 +135,34 @@ export type ManagedPost = {
   post: BlogPost;
   published: boolean;
 };
+
+export type PlatformStats = {
+  users: { total: number; byRole: Record<string, number> };
+  courses: number;
+  lessons: number;
+  enrollments: number;
+  quizzes: number;
+  quizAttempts: number;
+  lessonsCompleted: number;
+  blogPosts: { total: number; published: number; drafts: number };
+};
+
+/**
+ * A user as the admin screens see them.
+ *
+ * The users-permissions endpoints answer with a bare array and a flat object -
+ * no { data } wrapper and no attributes nesting - unlike everything under
+ * /api/<content-type>. Worth stating, because it is the one place in this app
+ * where the response shape is different.
+ */
+export type ManagedUser = {
+  id: number;
+  username: string;
+  email: string;
+  confirmed: boolean;
+  blocked: boolean;
+  createdAt: string;
+  role: { id: number; name: string; type: string } | null;
+};
+
+export type AssignableRole = { id: number; name: string; type: string };

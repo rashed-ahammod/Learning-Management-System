@@ -58,7 +58,7 @@ Updated as modules land.
 - [x] Lesson viewing
 - [x] Progress tracking
 - [x] Quiz with auto-grading
-- [ ] Admin panel
+- [x] Admin panel
 - [x] Blog with draft/publish
 
 ## Sample data

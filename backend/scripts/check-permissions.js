@@ -580,6 +580,42 @@ async function run() {
   const samAfter = await req('GET', '/api/enrollments', { token: sam.token });
   expect('     and the enrolment', samAfter.json?.data?.length, 2);
 
+  section('the platform stats are admin-only');
+  expect('GET /api/stats/overview  logged out', (await req('GET', '/api/stats/overview')).status, 403);
+  expect(
+    'GET /api/stats/overview  a student',
+    (await req('GET', '/api/stats/overview', { token: sam.token })).status,
+    403
+  );
+  expect(
+    'GET /api/stats/overview  a content manager',
+    (await req('GET', '/api/stats/overview', { token: manager.token })).status,
+    403
+  );
+  expect(
+    'GET /api/stats/overview  an instructor',
+    (await req('GET', '/api/stats/overview', { token: alice.token })).status,
+    403
+  );
+
+  const stats = await req('GET', '/api/stats/overview', { token: admin });
+  expect('GET /api/stats/overview  an admin', stats.status, 200);
+  expect('     counts users by role', typeof stats.json?.data?.users?.byRole?.student, 'number');
+  expect('     counts courses', typeof stats.json?.data?.courses, 'number');
+  // Every document has a draft row and published ones have a second row, so a
+  // naive row count would report more posts than exist.
+  expect(
+    '     never reports more published than total',
+    stats.json?.data?.blogPosts?.published <= stats.json?.data?.blogPosts?.total,
+    true
+  );
+  expect(
+    '     drafts plus published equals the total',
+    stats.json?.data?.blogPosts?.drafts + stats.json?.data?.blogPosts?.published ===
+      stats.json?.data?.blogPosts?.total,
+    true
+  );
+
   section('only admins and content managers write the blog');
   const manager2 = await makeUser(admin, 'content-manager', `cm2${stamp}`);
 

@@ -7,6 +7,7 @@ const PROGRESS = 'api::lesson-progress.lesson-progress';
 const QUIZ = 'api::quiz.quiz';
 const QUIZ_ATTEMPT = 'api::quiz-attempt.quiz-attempt';
 const BLOG = 'api::blog-post.blog-post';
+const STATS = 'api::stats.stats';
 
 /**
  * Progress has no generated CRUD - see its routes file. These are the three
@@ -66,6 +67,7 @@ const PERMISSIONS = {
     ...fullAccess(BLOG),
     ...MANAGE_BLOG,
     `${QUIZ_ATTEMPT}.remove`,
+    `${STATS}.overview`, // the admin dashboard
     ...SEE_STUDENT_PROGRESS,
     'plugin::users-permissions.user.find',
     'plugin::users-permissions.user.findOne',
