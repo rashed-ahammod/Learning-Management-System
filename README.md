@@ -57,7 +57,7 @@ Updated as modules land.
 - [x] Course enrollment
 - [x] Lesson viewing
 - [x] Progress tracking
-- [ ] Quiz with auto-grading
+- [x] Quiz with auto-grading
 - [ ] Admin panel
 - [ ] Blog with draft/publish
 

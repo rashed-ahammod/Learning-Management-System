@@ -69,3 +69,42 @@ export type StudentProgress = {
   totalLessons: number;
   percentage: number;
 };
+
+/**
+ * A question as the browser receives it.
+ *
+ * `correctIndex` is optional in the type because it is optional in the
+ * response: the backend builds a student's copy without it. Making it optional
+ * here means the compiler will not let the quiz-taking UI read it by accident -
+ * it has to be narrowed first, and the only place that narrowing succeeds is
+ * staff-facing code.
+ */
+export type QuizQuestion = {
+  id: number;
+  text: string;
+  options: string[];
+  correctIndex?: number;
+};
+
+export type Quiz = {
+  id: number;
+  documentId: string;
+  title: string;
+  questions: QuizQuestion[];
+  course: { documentId: string; title: string } | null;
+};
+
+export type AttemptAnswer = {
+  questionId: number;
+  selectedIndex: number | null;
+  correct: boolean;
+};
+
+export type QuizAttempt = {
+  id: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  answers: AttemptAnswer[];
+  submittedAt: string;
+};

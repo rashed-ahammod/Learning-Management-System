@@ -64,6 +64,20 @@ async function run() {
   console.log('\n--- signing in with good credentials ---');
   const good = await submitLogin(EMAIL, PASSWORD);
 
+  /**
+   * Strapi rate-limits /api/auth/local to a handful of attempts a minute.
+   *
+   * Without this the run carries on and falls over decoding an empty cookie,
+   * which reads like a bug in the app rather than a limit being hit. Worth the
+   * few lines, because anyone running the checks twice in a row will meet it.
+   */
+  if (!good.sessionCookie) {
+    console.error('\nNo session cookie came back from signing in.');
+    console.error('Either the credentials are wrong, or Strapi is rate-limiting sign-ins -');
+    console.error('it allows only a handful per minute. Wait a moment and try again.\n');
+    process.exit(1);
+  }
+
   expect('POST /login    redirects', good.status, 303);
   expect('     to the admin landing page', good.location, '/admin');
   expect('     and sets a session cookie', Boolean(good.sessionCookie), true);
