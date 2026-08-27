@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { getSession } from '@/lib/auth';
 import { logout } from '@/lib/auth-actions';
-import { ROLE_LABELS, STAFF_ROLES, type Role } from '@/lib/roles';
+import { ROLE_LABELS, STAFF_ROLES, homePathFor, type Role } from '@/lib/roles';
 
 /** The nav each role gets. Everyone also sees the public links. */
 function linksFor(role: Role): { href: string; label: string }[] {
@@ -26,7 +26,13 @@ export default async function SiteHeader() {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
-        <Link href="/" className="text-base font-semibold tracking-tight">
+        {/* Signed in, the wordmark goes to wherever that role works from - the
+            admin dashboard, the manage screens, or My courses - rather than the
+            public catalogue, which is still one click away under "Courses". */}
+        <Link
+          href={session ? homePathFor(session.role) : '/'}
+          className="text-base font-semibold tracking-tight"
+        >
           LMS
         </Link>
 
