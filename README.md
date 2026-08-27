@@ -59,7 +59,7 @@ Updated as modules land.
 - [x] Progress tracking
 - [x] Quiz with auto-grading
 - [ ] Admin panel
-- [ ] Blog with draft/publish
+- [x] Blog with draft/publish
 
 ## Sample data
 

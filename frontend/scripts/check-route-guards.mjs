@@ -89,6 +89,20 @@ async function run() {
   section('a content manager');
   expect('GET /manage      allowed', (await go('/manage', 'content-manager')).status, 200);
   expect('GET /admin       turned away', (await go('/admin', 'content-manager')).to, '/unauthorized');
+  expect('GET /manage/blog allowed', (await go('/manage/blog', 'content-manager')).status, 200);
+
+  section('the blog is narrower than the rest of /manage');
+  // /manage/blog has to beat /manage, which is why the rules are sorted by
+  // prefix length rather than left in the order they were typed.
+  expect('GET /manage/blog an instructor may not', (await go('/manage/blog', 'instructor')).to, '/unauthorized');
+  expect('GET /manage      but courses are fine', (await go('/manage', 'instructor')).status, 200);
+  expect('GET /manage/blog nor a student', (await go('/manage/blog', 'student')).to, '/unauthorized');
+  expect('GET /manage/blog an admin may', (await go('/manage/blog', 'admin')).status, 200);
+  expect(
+    'GET /manage/blog/new inherits the same rule',
+    (await go('/manage/blog/new', 'instructor')).to,
+    '/unauthorized'
+  );
 
   section('an admin');
   expect('GET /admin       allowed', (await go('/admin', 'admin')).status, 200);

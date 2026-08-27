@@ -24,15 +24,22 @@ type RouteRule = {
 /**
  * Which roles may open which part of the app.
  *
- * Longest prefix first, so /admin is matched before any shorter rule that might
- * also cover it.
+ * Note /manage/blog is narrower than /manage: instructors manage courses but do
+ * not write the blog. That only works if the more specific rule is checked
+ * first, so rather than relying on the order somebody happens to type them in,
+ * the list is sorted by prefix length below. Getting this wrong would silently
+ * hand instructors the blog, which is exactly the sort of mistake that never
+ * announces itself.
  */
-const ROUTE_RULES: RouteRule[] = [
+const RULES: RouteRule[] = [
   { prefix: '/admin', roles: ['admin'] },
+  { prefix: '/manage/blog', roles: ['admin', 'content-manager'] },
   { prefix: '/manage', roles: STAFF_ROLES },
   { prefix: '/my-courses', roles: ['student'] },
   { prefix: '/dashboard', roles: ROLES },
 ];
+
+const ROUTE_RULES = [...RULES].sort((a, b) => b.prefix.length - a.prefix.length);
 
 /**
  * The roles allowed to open a path, or null if the path is open to everyone.

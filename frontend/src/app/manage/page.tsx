@@ -34,12 +34,24 @@ export default async function ManagePage() {
           </p>
         </div>
 
-        <Link
-          href="/manage/courses/new"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
-        >
-          New course
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* Instructors manage courses but do not write the blog, so the link
+              is only offered to the roles that can actually open it. */}
+          {session.role !== 'instructor' ? (
+            <Link
+              href="/manage/blog"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium transition hover:bg-slate-50"
+            >
+              Blog
+            </Link>
+          ) : null}
+          <Link
+            href="/manage/courses/new"
+            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+          >
+            New course
+          </Link>
+        </div>
       </div>
 
       {courses.length === 0 ? (

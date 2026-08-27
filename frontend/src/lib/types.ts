@@ -108,3 +108,30 @@ export type QuizAttempt = {
   answers: AttemptAnswer[];
   submittedAt: string;
 };
+
+export type BlogPost = {
+  id: number;
+  documentId: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string | null;
+  coverImageUrl: string | null;
+  author: Author | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * A post in the management list, with whether a published version exists.
+ *
+ * That flag cannot come from the post itself. With draft and publish switched
+ * on, every document has a draft, and the draft always reports publishedAt as
+ * null - so "is this live?" is answered by asking Strapi for the published list
+ * separately and seeing which ids appear in it.
+ */
+export type ManagedPost = {
+  post: BlogPost;
+  published: boolean;
+};
