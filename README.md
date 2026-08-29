@@ -10,15 +10,25 @@ backend), with four user roles: Admin, Content Manager, Instructor and Student.
 
 Sign in with any of these to look around (all share the password `Demo1234!`):
 
-| Email | Role | Lands on |
+| Email | Role | What you land on |
 |---|---|---|
-| `sadia@lms.test` | Student | My courses — enrolled, with progress |
-| `rahim@lms.test` | Instructor | Manage — owns one course |
-| `nadia@lms.test` | Content Manager | Manage — all courses, plus the blog |
+| `sadia@university.test` | Student | Three courses, one of them 3 of 5 lessons done — 60% |
+| `tanvir@university.test` | Student | One course finished, one part-way |
+| `kamrul@university.test` | Instructor | Owns *Admission Test: Mathematics* only |
+| `farhana@university.test` | Instructor | Owns *Admission Test: English* only |
+| `nusrat@university.test` | Content Manager | Every course, plus the blog |
 
-Worth trying: open a course while signed out and you get the lesson **titles** but no
-lesson bodies and nothing to click - the backend refuses lesson content to anyone who is
-not enrolled. Sign in as Sadia and the same page gains a progress bar and working links.
+The demo content is a university admission-prep programme: four courses, two of them
+owned by different instructors, two quizzes, real progress part-way through, quiz
+attempts already on record, and one blog post still in draft.
+
+Two things worth trying, because they are the point of the whole design:
+
+- Open a course **signed out**. You get the lesson titles as a syllabus, but no lesson
+  bodies and nothing to click — the backend refuses lesson content to anyone who is not
+  enrolled, so there is nothing to reveal by inspecting the page.
+- Sign in as **Kamrul** and open *Admission Test: English*, which Farhana owns. The editor
+  refuses it. Instructors write their own courses and nobody else's.
 
 ## Repository layout
 
@@ -77,9 +87,16 @@ An empty install works perfectly and shows you nothing, so there is a seed:
 cd backend && npm run seed:demo
 ```
 
-It adds a content manager, an instructor and a student, two courses with
-lessons, a quiz, and a published post plus a draft. Running it twice is safe -
-anything already there is left alone. It prints the logins when it finishes.
+It adds a content manager, two instructors and three students, four courses with
+lessons, two quizzes, enrolments with real progress part-way through, quiz attempts,
+and two published posts plus a draft. Running it twice is safe - anything already there
+is left alone. It prints the logins when it finishes.
+
+To clear what a previous run created and start again:
+
+```bash
+cd backend && npm run seed:reset
+```
 
 ## Feature checklist
 
