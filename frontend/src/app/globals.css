@@ -34,3 +34,27 @@
     background-position: 100% 50%;
   }
 }
+
+/* Used by the hero mascot's eyes - a quick squash to read as a blink. */
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+/* A small back-and-forth rotation, used on the mascot's cap and the floating
+   decorations around it so they read as bobbing in place rather than orbiting. */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}

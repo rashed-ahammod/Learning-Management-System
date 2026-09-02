@@ -4,6 +4,7 @@ import AnimatedNumber from '@/components/AnimatedNumber';
 import CourseCard from '@/components/CourseCard';
 import CountdownTimer from '@/components/CountdownTimer';
 import EmptyState from '@/components/EmptyState';
+import HeroMascot from '@/components/HeroMascot';
 import Reveal from '@/components/Reveal';
 import StickyCta from '@/components/StickyCta';
 import { getSession } from '@/lib/auth';
@@ -173,77 +174,81 @@ export default async function HomePage() {
           }}
         />
 
-        <div className="relative py-20 sm:py-28">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            Applications are open — University admission prep, structured
-          </span>
+        <div className="relative grid gap-6 py-20 sm:py-28 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-12">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              Applications are open — University admission prep, structured
+            </span>
 
-          <h1 className="mt-6 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Most applicants prepare from scattered PDFs, old group chats and guesswork.
-          </h1>
-          <p className="mt-3 max-w-2xl bg-[length:200%_auto] bg-gradient-to-r from-indigo-300 via-violet-300 to-sky-300 bg-clip-text text-4xl font-semibold tracking-tight text-transparent motion-safe:animate-[gradient-pan_6s_ease_infinite] sm:text-5xl">
-            This is where that stops.
-          </p>
+            <h1 className="mt-6 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+              Most applicants prepare from scattered PDFs, old group chats and guesswork.
+            </h1>
+            <p className="mt-3 max-w-2xl bg-[length:200%_auto] bg-gradient-to-r from-indigo-300 via-violet-300 to-sky-300 bg-clip-text text-4xl font-semibold tracking-tight text-transparent motion-safe:animate-[gradient-pan_6s_ease_infinite] sm:text-5xl">
+              This is where that stops.
+            </p>
 
-          <p className="mt-6 max-w-xl text-base text-slate-300">
-            One platform where instructors build structured courses, students track their
-            progress lesson by lesson, and every quiz is graded the instant it&apos;s submitted —
-            so nobody walks into test day not knowing where they stand.
-          </p>
+            <p className="mt-6 max-w-xl text-base text-slate-300">
+              One platform where instructors build structured courses, students track their
+              progress lesson by lesson, and every quiz is graded the instant it&apos;s
+              submitted — so nobody walks into test day not knowing where they stand.
+            </p>
 
-          <div id="hero-cta" className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href={primaryCta.href}
-              className="group inline-flex items-center gap-2 rounded-md bg-white px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-200"
-            >
-              {primaryCta.label}
-              <span aria-hidden className="transition group-hover:translate-x-0.5">
-                →
-              </span>
-            </Link>
-            <Link
-              href="#courses"
-              className="rounded-md border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              Browse courses
-            </Link>
+            <div id="hero-cta" className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                href={primaryCta.href}
+                className="group inline-flex items-center gap-2 rounded-md bg-white px-5 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-200"
+              >
+                {primaryCta.label}
+                <span aria-hidden className="transition group-hover:translate-x-0.5">
+                  →
+                </span>
+              </Link>
+              <Link
+                href="#courses"
+                className="rounded-md border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                Browse courses
+              </Link>
+            </div>
+
+            {/* Live countdown to the same test date the blog announces. */}
+            <div className="mt-14 inline-flex flex-col gap-4 rounded-xl border border-indigo-400/20 bg-gradient-to-r from-indigo-500/10 via-white/5 to-sky-400/10 px-6 py-5 backdrop-blur-sm sm:flex-row sm:items-center sm:gap-8">
+              <div>
+                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                  <Icon name="bolt" className="h-3.5 w-3.5 text-amber-400" />
+                  Time until the entrance test
+                </p>
+                <p className="mt-1 text-xs text-slate-500">14 November — same date as the blog</p>
+              </div>
+              <div className="h-px w-full bg-white/10 sm:h-10 sm:w-px" />
+              <CountdownTimer targetIso={ADMISSION_TEST_DATE} />
+            </div>
+
+            {/* Real numbers, pulled from the same public API the catalogue below uses. */}
+            <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-white/10 pt-8">
+              <div>
+                <dt className="text-xs text-slate-400">Courses</dt>
+                <dd className="mt-1 text-2xl font-semibold">
+                  <AnimatedNumber value={courses.length} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-400">Lessons</dt>
+                <dd className="mt-1 text-2xl font-semibold">
+                  <AnimatedNumber value={totalLessons} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-400">Updates published</dt>
+                <dd className="mt-1 text-2xl font-semibold">
+                  <AnimatedNumber value={posts.length} />
+                </dd>
+              </div>
+            </dl>
           </div>
 
-          {/* Live countdown to the same test date the blog announces. */}
-          <div className="mt-14 inline-flex flex-col gap-4 rounded-xl border border-indigo-400/20 bg-gradient-to-r from-indigo-500/10 via-white/5 to-sky-400/10 px-6 py-5 backdrop-blur-sm sm:flex-row sm:items-center sm:gap-8">
-            <div>
-              <p className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
-                <Icon name="bolt" className="h-3.5 w-3.5 text-amber-400" />
-                Time until the entrance test
-              </p>
-              <p className="mt-1 text-xs text-slate-500">14 November — same date as the blog</p>
-            </div>
-            <div className="h-px w-full bg-white/10 sm:h-10 sm:w-px" />
-            <CountdownTimer targetIso={ADMISSION_TEST_DATE} />
-          </div>
-
-          {/* Real numbers, pulled from the same public API the catalogue below uses. */}
-          <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-white/10 pt-8">
-            <div>
-              <dt className="text-xs text-slate-400">Courses</dt>
-              <dd className="mt-1 text-2xl font-semibold">
-                <AnimatedNumber value={courses.length} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">Lessons</dt>
-              <dd className="mt-1 text-2xl font-semibold">
-                <AnimatedNumber value={totalLessons} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-400">Updates published</dt>
-              <dd className="mt-1 text-2xl font-semibold">
-                <AnimatedNumber value={posts.length} />
-              </dd>
-            </div>
-          </dl>
+          <HeroMascot />
         </div>
       </FullBleed>
 
