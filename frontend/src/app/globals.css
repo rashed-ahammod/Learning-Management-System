@@ -19,3 +19,18 @@
     transform: translate(-16px, 20px) scale(1.05);
   }
 }
+
+/**
+ * A slow colour sweep across an oversized gradient background. Used on the
+ * hero's headline and the closing CTA band - both need `bg-[length:200%_200%]`
+ * (or `_auto` for text) alongside this so there is gradient left to sweep into.
+ */
+@keyframes gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}

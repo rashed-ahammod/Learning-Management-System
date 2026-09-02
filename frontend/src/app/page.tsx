@@ -53,7 +53,7 @@ function FullBleed({
 
 function StepNumber({ n }: { n: number }) {
   return (
-    <span className="text-4xl font-bold tracking-tight text-slate-200" aria-hidden>
+    <span className="text-4xl font-bold tracking-tight text-indigo-200" aria-hidden>
       {String(n).padStart(2, '0')}
     </span>
   );
@@ -145,16 +145,22 @@ export default async function HomePage() {
   return (
     <div className="-mt-10 -mx-6">
       {/* ---------- Hero ---------- */}
-      <FullBleed className="overflow-hidden bg-slate-950 text-white">
-        {/* Two soft, blurred circles for depth, plus a faint grid - all pure CSS. */}
+      <FullBleed className="overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white">
+        {/* Three soft, blurred colour blobs drifting at different speeds, plus a
+            faint grid - a small "aurora" effect, all pure CSS. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl motion-safe:animate-[float_9s_ease-in-out_infinite]"
+          className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/25 blur-3xl motion-safe:animate-[float_9s_ease-in-out_infinite]"
         />
         <div
           aria-hidden
           style={{ animationDelay: '-3s' }}
-          className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl motion-safe:animate-[float_11s_ease-in-out_infinite]"
+          className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-sky-400/15 blur-3xl motion-safe:animate-[float_11s_ease-in-out_infinite]"
+        />
+        <div
+          aria-hidden
+          style={{ animationDelay: '-6s' }}
+          className="pointer-events-none absolute top-1/3 left-1/3 h-72 w-72 rounded-full bg-fuchsia-500/10 blur-3xl motion-safe:animate-[float_13s_ease-in-out_infinite]"
         />
         <div
           aria-hidden
@@ -176,7 +182,7 @@ export default async function HomePage() {
           <h1 className="mt-6 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
             Most applicants prepare from scattered PDFs, old group chats and guesswork.
           </h1>
-          <p className="mt-3 max-w-2xl bg-gradient-to-r from-white to-slate-400 bg-clip-text text-4xl font-semibold tracking-tight text-transparent sm:text-5xl">
+          <p className="mt-3 max-w-2xl bg-[length:200%_auto] bg-gradient-to-r from-indigo-300 via-violet-300 to-sky-300 bg-clip-text text-4xl font-semibold tracking-tight text-transparent motion-safe:animate-[gradient-pan_6s_ease_infinite] sm:text-5xl">
             This is where that stops.
           </p>
 
@@ -205,9 +211,9 @@ export default async function HomePage() {
           </div>
 
           {/* Live countdown to the same test date the blog announces. */}
-          <div className="mt-14 inline-flex flex-col gap-4 rounded-xl border border-white/10 bg-white/5 px-6 py-5 sm:flex-row sm:items-center sm:gap-8">
+          <div className="mt-14 inline-flex flex-col gap-4 rounded-xl border border-indigo-400/20 bg-gradient-to-r from-indigo-500/10 via-white/5 to-sky-400/10 px-6 py-5 backdrop-blur-sm sm:flex-row sm:items-center sm:gap-8">
             <div>
-              <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+              <p className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
                 <Icon name="bolt" className="h-3.5 w-3.5 text-amber-400" />
                 Time until the entrance test
               </p>
@@ -293,9 +299,9 @@ export default async function HomePage() {
 
             <Reveal
               delayMs={150}
-              className="rounded-lg border border-slate-900 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg shadow-slate-900/10"
+              className="rounded-lg border border-indigo-900 bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-950 p-6 text-white shadow-lg shadow-indigo-900/20"
             >
-              <p className="text-sm font-medium text-slate-300">With this platform</p>
+              <p className="text-sm font-medium text-indigo-200">With this platform</p>
               <ul className="mt-4 space-y-3 text-sm">
                 {[
                   'Every subject organised into courses with lessons in a fixed, sensible order',
@@ -314,38 +320,40 @@ export default async function HomePage() {
         </section>
 
         {/* ---------- How it works ---------- */}
-        <section className="border-t border-slate-200 py-20">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            How it works
-          </h2>
+        <FullBleed className="border-t border-slate-200 bg-gradient-to-b from-indigo-50/70 via-violet-50/30 to-transparent">
+          <section className="py-20">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              How it works
+            </h2>
 
-          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: 'Create your account',
-                body: 'Sign up in under a minute. Every new account starts as a student — no waiting on approval.',
-              },
-              {
-                title: 'Enrol in a course',
-                body: 'Browse what’s on offer by subject and enrol in whichever ones you need.',
-              },
-              {
-                title: 'Work through the lessons',
-                body: 'Lessons run in a fixed order. Mark each one complete as you finish it.',
-              },
-              {
-                title: 'Take the quiz, see your score',
-                body: 'Submit your answers and get marked immediately — no waiting for anyone to grade it.',
-              },
-            ].map((step, index) => (
-              <Reveal key={step.title} delayMs={index * 100}>
-                <StepNumber n={index + 1} />
-                <h3 className="mt-2 font-semibold">{step.title}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{step.body}</p>
-              </Reveal>
-            ))}
-          </div>
-        </section>
+            <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  title: 'Create your account',
+                  body: 'Sign up in under a minute. Every new account starts as a student — no waiting on approval.',
+                },
+                {
+                  title: 'Enrol in a course',
+                  body: 'Browse what’s on offer by subject and enrol in whichever ones you need.',
+                },
+                {
+                  title: 'Work through the lessons',
+                  body: 'Lessons run in a fixed order. Mark each one complete as you finish it.',
+                },
+                {
+                  title: 'Take the quiz, see your score',
+                  body: 'Submit your answers and get marked immediately — no waiting for anyone to grade it.',
+                },
+              ].map((step, index) => (
+                <Reveal key={step.title} delayMs={index * 100}>
+                  <StepNumber n={index + 1} />
+                  <h3 className="mt-2 font-semibold">{step.title}</h3>
+                  <p className="mt-1.5 text-sm text-slate-600">{step.body}</p>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        </FullBleed>
 
         {/* ---------- Built for every role ---------- */}
         <section className="border-t border-slate-200 py-20">
@@ -358,27 +366,33 @@ export default async function HomePage() {
               {
                 icon: 'users' as const,
                 role: 'Student',
+                color: 'from-indigo-500 to-blue-600 shadow-indigo-500/30',
                 body: 'Enrol in prep courses, work through lessons at your own pace, and take auto-graded quizzes that show exactly where you stand.',
               },
               {
                 icon: 'book' as const,
                 role: 'Instructor',
+                color: 'from-violet-500 to-fuchsia-600 shadow-violet-500/30',
                 body: 'Own your subject’s courses and quizzes, and see how every student enrolled in them is actually progressing.',
               },
               {
                 icon: 'chart' as const,
                 role: 'Content Manager',
+                color: 'from-sky-500 to-cyan-600 shadow-sky-500/30',
                 body: 'Build and maintain the whole course library, and publish blog updates the moment a deadline or policy changes.',
               },
               {
                 icon: 'shield' as const,
                 role: 'Admin',
+                color: 'from-rose-500 to-orange-600 shadow-rose-500/30',
                 body: 'Full oversight: reassign any user’s role, manage every course and post, and see platform-wide stats at a glance.',
               },
             ].map((card, index) => (
               <Reveal key={card.role} delayMs={index * 80}>
                 <div className="group h-full rounded-lg border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-slate-800 to-slate-950 text-white transition group-hover:scale-110">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br text-white shadow-lg transition group-hover:scale-110 ${card.color}`}
+                  >
                     <Icon name={card.icon} className="h-5 w-5" />
                   </div>
                   <h3 className="mt-4 font-semibold">{card.role}</h3>
@@ -390,39 +404,44 @@ export default async function HomePage() {
         </section>
 
         {/* ---------- Mission, vision, goal ---------- */}
-        <section className="border-t border-slate-200 py-20">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Why this exists
-          </h2>
+        <FullBleed className="border-t border-slate-200 bg-gradient-to-b from-violet-50/60 via-sky-50/30 to-transparent">
+          <section className="py-20">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Why this exists
+            </h2>
 
-          <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            {[
-              {
-                icon: 'compass' as const,
-                title: 'Mission',
-                body: 'Replace scattered PDFs, outdated group chats and guesswork with one structured programme every applicant can actually track.',
-              },
-              {
-                icon: 'target' as const,
-                title: 'Vision',
-                body: 'A platform where no applicant reaches test day not knowing where they stand, because their preparation was measured, not assumed, from day one.',
-              },
-              {
-                icon: 'flag' as const,
-                title: 'Goal',
-                body: 'Give every instructor and content manager the tools to build a course once, and know in real time exactly how their students are doing.',
-              },
-            ].map((card, index) => (
-              <Reveal key={card.title} delayMs={index * 100}>
-                <div className="rounded-lg p-1 transition hover:-translate-y-0.5">
-                  <Icon name={card.icon} className="h-6 w-6 text-slate-400" />
-                  <h3 className="mt-3 font-semibold">{card.title}</h3>
-                  <p className="mt-1.5 text-sm text-slate-600">{card.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
+            <div className="mt-6 grid gap-6 sm:grid-cols-3">
+              {[
+                {
+                  icon: 'compass' as const,
+                  title: 'Mission',
+                  color: 'text-indigo-500',
+                  body: 'Replace scattered PDFs, outdated group chats and guesswork with one structured programme every applicant can actually track.',
+                },
+                {
+                  icon: 'target' as const,
+                  title: 'Vision',
+                  color: 'text-fuchsia-500',
+                  body: 'A platform where no applicant reaches test day not knowing where they stand, because their preparation was measured, not assumed, from day one.',
+                },
+                {
+                  icon: 'flag' as const,
+                  title: 'Goal',
+                  color: 'text-emerald-500',
+                  body: 'Give every instructor and content manager the tools to build a course once, and know in real time exactly how their students are doing.',
+                },
+              ].map((card, index) => (
+                <Reveal key={card.title} delayMs={index * 100}>
+                  <div className="rounded-lg p-1 transition hover:-translate-y-0.5">
+                    <Icon name={card.icon} className={`h-6 w-6 ${card.color}`} />
+                    <h3 className="mt-3 font-semibold">{card.title}</h3>
+                    <p className="mt-1.5 text-sm text-slate-600">{card.body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        </FullBleed>
 
         {/* ---------- Course catalogue ---------- */}
         <section id="courses" className="scroll-mt-20 border-t border-slate-200 py-20">
@@ -452,23 +471,32 @@ export default async function HomePage() {
       </div>
 
       {/* ---------- Final CTA ---------- */}
-      <FullBleed className="mt-4 bg-slate-50">
-        <Reveal className="border-t border-slate-200 py-16 text-center">
+      <FullBleed className="relative mt-4 overflow-hidden bg-[length:200%_200%] bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-600 text-white motion-safe:animate-[gradient-pan_10s_ease_infinite]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+        <Reveal className="relative py-16 text-center">
           <h2 className="text-2xl font-semibold tracking-tight">Ready to start preparing?</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+          <p className="mx-auto mt-2 max-w-md text-sm text-indigo-100">
             It takes less than a minute to create an account, and every course on this platform
             is one click away from there.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Link
               href={primaryCta.href}
-              className="rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:scale-[1.03] hover:bg-slate-700"
+              className="rounded-md bg-white px-5 py-2.5 text-sm font-medium text-indigo-700 transition hover:scale-[1.03] hover:bg-indigo-50"
             >
               {primaryCta.label}
             </Link>
             <Link
               href="/blog"
-              className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium transition hover:bg-slate-50"
+              className="rounded-md border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/20"
             >
               Read the latest updates
             </Link>
