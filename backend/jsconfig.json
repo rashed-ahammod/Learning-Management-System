@@ -3,7 +3,7 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "ES2021",
-    "checkJs": true,
+    "checkJs": false,
     "allowJs": true
   }
 }

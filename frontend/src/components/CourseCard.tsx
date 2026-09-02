@@ -14,7 +14,7 @@ export default function CourseCard({ course, progress }: Props) {
   return (
     <Link
       href={`/courses/${course.slug}`}
-      className="flex flex-col rounded-lg border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-sm"
+      className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:shadow-sm"
     >
       <h3 className="font-semibold tracking-tight">{course.title}</h3>
 
