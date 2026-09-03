@@ -3,10 +3,44 @@ import { NextResponse, type NextRequest } from 'next/server';
 // Next 16 renamed this convention: what used to be middleware.ts is now proxy.ts,
 // exporting a default `proxy` function. Same execution point, same job.
 
-import { rolesAllowedFor } from './lib/roles';
-import { SESSION_COOKIE, parseSession } from './lib/session';
+import { isRole, rolesAllowedFor } from './lib/roles';
+import { SESSION_COOKIE, parseSession, serializeSession, type Session } from './lib/session';
 
 const PUBLIC_ONLY = ['/login', '/signup'];
+
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+
+const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 60 * 60 * 24 * 7,
+};
+
+/**
+ * Asks Strapi who this JWT actually belongs to right now, rather than trusting
+ * the role captured in the cookie at login time.
+ *
+ * Only called for protected routes - a public page has no role to get wrong,
+ * so it is never worth the extra request. If Strapi cannot be reached, the
+ * cached role is kept rather than treating a network hiccup as a role change.
+ */
+async function currentRole(jwt: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${STRAPI_URL}/api/users/me`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+
+    if (!response.ok) return null;
+
+    const me = (await response.json()) as { role?: { type?: string } | null };
+
+    return me.role?.type ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Decides who gets to *open a page*. Runs before any page does.
@@ -27,9 +61,9 @@ const PUBLIC_ONLY = ['/login', '/signup'];
  * lives in the backend - in src/bootstrap/permissions.js and the policies beside
  * it - and is verified there by `npm run check:permissions`.
  */
-export default function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = parseSession(request.cookies.get(SESSION_COOKIE)?.value);
+  let session = parseSession(request.cookies.get(SESSION_COOKIE)?.value);
 
   // No reason to show the login form to somebody already signed in.
   if (session && PUBLIC_ONLY.includes(pathname)) {
@@ -50,11 +84,41 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (!allowed.includes(session.role)) {
-    return NextResponse.redirect(new URL('/unauthorized', request.url));
+  // A promotion or demotion made after this session started would otherwise
+  // stay invisible until the next login - check Strapi directly instead of
+  // trusting whatever role was cached at sign-in.
+  const freshRole = await currentRole(session.jwt);
+  let refreshedCookie: string | null = null;
+
+  if (isRole(freshRole) && freshRole !== session.role) {
+    session = { ...session, role: freshRole } as Session;
+    refreshedCookie = serializeSession(session);
+
+    // Rewriting only the response cookie would fix the browser's copy for the
+    // *next* request but leave this one rendering against the stale role - the
+    // page underneath reads cookies() off the incoming request, not the
+    // response. Setting it here too means the page that renders right after a
+    // promotion already sees the new role, not one navigation later.
+    request.cookies.set(SESSION_COOKIE, refreshedCookie);
   }
 
-  return NextResponse.next();
+  if (!allowed.includes(session.role)) {
+    const response = NextResponse.redirect(new URL('/unauthorized', request.url));
+
+    if (refreshedCookie) {
+      response.cookies.set(SESSION_COOKIE, refreshedCookie, SESSION_COOKIE_OPTIONS);
+    }
+
+    return response;
+  }
+
+  const response = NextResponse.next({ request });
+
+  if (refreshedCookie) {
+    response.cookies.set(SESSION_COOKIE, refreshedCookie, SESSION_COOKIE_OPTIONS);
+  }
+
+  return response;
 }
 
 export const config = {
